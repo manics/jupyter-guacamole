@@ -8,8 +8,7 @@ RUN cd /guacamole-client && \
 
 
 ################################################################################
-# https://github.com/apache/guacamole-server/blob/1.4.0/Dockerfile
-FROM docker.io/guacamole/guacd:1.4.0
+FROM docker.io/library/ubuntu:22.04
 
 USER root
 
@@ -17,8 +16,7 @@ RUN apt-get -y -q update && \
     apt-get install -y -q \
     curl \
     default-jre-headless \
-    python-pip \
-    supervisor
+    python3-pip
 
 # Guacamole is incompatible with Tomcat 10
 # https://issues.apache.org/jira/browse/GUACAMOLE-1325
@@ -36,9 +34,9 @@ RUN curl -sfLO https://dlcdn.apache.org/tomcat/tomcat-${TOMCAT_VERSION%%.*}/v${T
 COPY --from=client-builder /guacamole-client/guacamole/target/guacamole-1.4.0.war /opt/tomcat/webapps/ROOT.war
 COPY --from=client-builder /guacamole-client/extensions/jupyternotatre-auth/target/jupyternotatre-auth-1.4.0.jar /etc/guacamole/extensions/
 
-ENV PATH /opt/tomcat/bin:$PATH
+RUN python3 -mpip install jhsingle-native-proxy==0.8.0
 
-RUN pip install supervisor-stdout==0.1.1
+ENV PATH /opt/tomcat/bin:$PATH
 
 # Create a new user guacamole
 ARG CLIENT_UID=1001
@@ -46,15 +44,17 @@ ARG CLIENT_GID=1001
 RUN groupadd --gid $CLIENT_GID guacamole
 RUN useradd --system --create-home --shell /usr/sbin/nologin --uid $CLIENT_UID --gid $CLIENT_GID guacamole
 
-RUN cd /opt/tomcat && \
+# /etc/guacamole/guacamole.properties will be updated at runtime
+RUN touch /etc/guacamole/guacamole.properties && \
+    chown guacamole /etc/guacamole/guacamole.properties && \
+    cd /opt/tomcat && \
     chown guacamole conf logs temp webapps work
 ADD logging.properties /opt/tomcat/conf/logging.properties
-ADD guacamole.properties /etc/guacamole/guacamole.properties
 ADD logback.xml /etc/guacamole/
+ADD start.sh /usr/local/bin/start.sh
 
-ADD supervisord.conf /etc/supervisor/
+USER guacamole
+WORKDIR /home/guacamole
 
 EXPOSE 8080
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
-
-# http://localhost:18080/guacamole
+CMD ["/usr/local/bin/start.sh"]

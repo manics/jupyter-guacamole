@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+
+  guacd:
+    image: docker.io/guacamole/guacd:1.4.0
+    restart: always
+    # ports:
+    #   - "4822:4822"
+    networks:
+      - guacamole
+
+  guacamole:
+    build:
+      context: ./docker-guacamole
+    environment:
+      GUACD_HOST: guacd
+      GUACD_PORT: "4822"
+      PROTOCOL: vnc
+      HOSTNAME: ubuntu-mate
+      # Change this to test running under a different JupyterHub user prefix
+      # JUPYTERHUB_SERVICE_PREFIX: /user/a
+    ports:
+      # Connect to guacamole directly
+      - "8080:8080"
+      # Connect using jhproxy (simulates JupyterHub)
+      - "8888:8888"
+    networks:
+      - guacamole
+
+  ubuntu-mate:
+    build:
+      context: ./docker-ubuntu-mate
+    # ports:
+    #   - "5901:5901"
+    networks:
+      - guacamole
+
+networks:
+  guacamole:
