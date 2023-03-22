@@ -49,9 +49,9 @@ RUN touch /etc/guacamole/guacamole.properties && \
     chown guacamole /etc/guacamole/guacamole.properties && \
     cd /opt/tomcat && \
     chown guacamole conf logs temp webapps work
-ADD logging.properties /opt/tomcat/conf/logging.properties
-ADD logback.xml /etc/guacamole/
-ADD start.sh /usr/local/bin/start.sh
+COPY logging.properties /opt/tomcat/conf/logging.properties
+COPY logback.xml /etc/guacamole/
+COPY start.sh /usr/local/bin/start.sh
 
 USER guacamole
 WORKDIR /home/guacamole
