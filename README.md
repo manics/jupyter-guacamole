@@ -1,4 +1,5 @@
 # Jupyter Guacamole
+[![Build](https://github.com/manics/jupyter-guacamole/actions/workflows/build.yml/badge.svg)](https://github.com/manics/jupyter-guacamole/actions/workflows/build.yml)
 
 **⚠️⚠️⚠️⚠️⚠️ Under development ⚠️⚠️⚠️⚠️⚠️**
 
