@@ -1,18 +1,4 @@
 ################################################################################
-# https://www.docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide/
-# FROM --platform=$BUILDPLATFORM docker.io/library/maven:3.8.4-openjdk-8 as client-builder
-FROM docker.io/library/maven:3.8.4-openjdk-8 as client-builder
-
-RUN git clone --depth=1 --branch=1.4.0-jupyterhub https://github.com/manics/guacamole-client.git /guacamole-client
-# RUN git clone --depth=1 --branch=jupyterhubnotatre https://github.com/manics/guacamole-client.git /guacamole-client
-
-RUN cd /guacamole-client/guacamole && \
-    mvn package -Dmaven.test.skip=true -Dmaven.javadoc.skip=true
-RUN cd /guacamole-client/extensions/jupyternotatre-auth && \
-    mvn package -Dmaven.test.skip=true -Dmaven.javadoc.skip=true
-
-
-################################################################################
 FROM docker.io/library/ubuntu:22.04
 
 USER root
@@ -33,8 +19,16 @@ RUN python3 -mpip install jhsingle-native-proxy==0.8.0
 RUN useradd --system --create-home --shell /usr/sbin/nologin guacamole
 WORKDIR /home/guacamole
 
-COPY --chown=guacamole:guacamole --from=client-builder /guacamole-client/guacamole/target/guacamole-1.4.0.war /home/guacamole/webapps/ROOT.war
-COPY --from=client-builder /guacamole-client/extensions/jupyternotatre-auth/target/jupyternotatre-auth-1.4.0.jar /etc/guacamole/extensions/
+ARG GUACAMOLE_JUPYTER_VERSION=1.5.0
+ARG GUACAMOLE_JUPYTER_TAG=1.5.0-jupyter.0
+RUN mkdir -p \
+        /home/guacamole/webapps \
+        /etc/guacamole/extensions && \
+    curl -sfL https://github.com/manics/guacamole-client/releases/download/${GUACAMOLE_JUPYTER_TAG}/guacamole-${GUACAMOLE_JUPYTER_VERSION}.war \
+        -o /home/guacamole/webapps/ROOT.war && \
+    chown -R guacamole:guacamole /home/guacamole/webapps/ && \
+    curl -sfL https://github.com/manics/guacamole-client/releases/download/${GUACAMOLE_JUPYTER_TAG}/jupyternotatre-auth-${GUACAMOLE_JUPYTER_VERSION}.jar \
+        -o /etc/guacamole/extensions/jupyternotatre-auth-${GUACAMOLE_JUPYTER_VERSION}.jar
 
 # /etc/guacamole/guacamole.properties will be updated at runtime
 RUN touch /etc/guacamole/guacamole.properties && \
@@ -48,7 +42,6 @@ RUN java -jar $JETTY_HOME/start.jar --add-modules=deploy,debug,http,requestlog,w
 # COPY logging.properties /opt/tomcat/conf/logging.properties
 COPY logback.xml /etc/guacamole/
 COPY start.sh /usr/local/bin/start.sh
-
 
 EXPOSE 8080
 CMD ["/usr/local/bin/start.sh"]
