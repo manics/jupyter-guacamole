@@ -19,6 +19,8 @@ services:
       GUACD_PORT: "4822"
       PROTOCOL: vnc
       HOSTNAME: ubuntu-mate
+      # DISABLE_COPY: "true"
+      # DISABLE_PASTE: "true"
       # Change this to test running under a different JupyterHub user prefix
       # JUPYTERHUB_SERVICE_PREFIX: /user/a
     ports:
