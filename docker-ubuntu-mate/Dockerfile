@@ -5,6 +5,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # Ubuntu 22.04 installs firefox from snap by default
 # https://www.omgubuntu.co.uk/2022/04/how-to-install-firefox-deb-apt-ubuntu-22-04
+# Note Firefox sandboxing may not work, to disable it see
+# https://wiki.mozilla.org/Security/Sandbox#Environment_variables
 RUN apt-get update -y -q && \
     apt-get install -y -q \
         curl \
