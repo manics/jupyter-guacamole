@@ -3,8 +3,7 @@ version: "3"
 services:
 
   guacd:
-    # image: docker.io/guacamole/guacd:1.5.0
-    image: docker.io/guacamole/guacd:1.4.0
+    image: docker.io/guacamole/guacd:1.5.0
     # restart: always
     # ports:
     #   - "4822:4822"
