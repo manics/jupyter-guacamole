@@ -9,7 +9,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  # IMAGE_NAME: ${{ github.repository }}
+  OWNER: ${{ github.repository_owner }}
   # Set to "" to publish container on tags only
   # Set to "<branch-name>" to also publish on every push to <branch-name>
   PUBLISH_BRANCH: "main"
@@ -36,7 +36,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           flavor: latest=false
-          images: ${{ env.REGISTRY }}/${{ matrix.image }}
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.image }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
