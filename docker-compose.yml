@@ -10,9 +10,9 @@ services:
     networks:
       - guacamole
 
-  guacamole:
+  jupyter-guacamole:
     build:
-      context: ./docker-guacamole
+      context: ./jupyter-guacamole
     environment:
       GUACD_HOST: guacd
       GUACD_PORT: "4822"
@@ -38,7 +38,7 @@ services:
 
   ubuntu-mate:
     build:
-      context: ./docker-ubuntu-mate
+      context: ./ubuntu-mate-vnc
     environment:
       # Allow unauthenticated VNC connections from outside container for testing
       LOCALHOST: "no"
