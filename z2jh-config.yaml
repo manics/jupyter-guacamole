@@ -1,0 +1,38 @@
+# Example configuration for zero-to-JupyterHub
+
+singleuser:
+  image:
+    name: ghcr.io/manics/jupyter-guacamole
+    tag: main
+  storage:
+    type: none
+  # Use default entrypoint
+  cmd:
+  extraEnv:
+    GUACD_HOST: localhost
+    GUACD_PORT: "4822"
+    PROTOCOL: vnc
+    HOSTNAME: localhost
+    # Optionally disable copy out and paste in
+    # DISABLE_COPY: "true"
+    # DISABLE_PASTE: "true"
+  extraContainers:
+    - name: guacd
+      image: docker.io/guacamole/guacd:1.5.0
+    - name: ubuntu-mate
+      image: ghcr.io/manics/ubuntu-mate-vnc:main
+      env:
+        - name: LOCALHOST
+          value: "yes"
+  # startTimeout: 300
+  # Use the default UID from the image
+  uid:
+
+prePuller:
+  extraImages:
+    guacd:
+      name: docker.io/guacamole/guacd
+      tag: 1.5.0
+    ubuntu-mate-vnc:
+      name: ghcr.io/manics/ubuntu-mate-vnc
+      tag: main
