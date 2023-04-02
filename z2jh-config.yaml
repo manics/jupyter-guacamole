@@ -1,13 +1,30 @@
 # Example configuration for zero-to-JupyterHub
 
+hub:
+  config:
+    KubeSpawner:
+      http_timeout: 60
+  extraConfig:
+    10-modify-pod: |
+      def modify_pod_hook(spawner, pod):
+          # First container is jhproxy/guacamole, move user volume to user container
+          pod.spec.containers[1].volume_mounts = pod.spec.containers[0].volume_mounts
+          pod.spec.containers[0].volume_mounts = None
+          return pod
+      c.KubeSpawner.modify_pod_hook = modify_pod_hook
+
 singleuser:
   image:
     name: ghcr.io/manics/jupyter-guacamole
     tag: main
   storage:
-    type: none
+    # Uncomment to disable persistent storage
+    # type: none
+    homeMountPath: /home/ubuntu
   # Use default entrypoint
   cmd:
+  cloudMetadata:
+    blockWithIptables: false
   extraEnv:
     GUACD_HOST: localhost
     GUACD_PORT: "4822"
@@ -17,13 +34,10 @@ singleuser:
     # DISABLE_COPY: "true"
     # DISABLE_PASTE: "true"
   extraContainers:
-    - name: guacd
-      image: docker.io/guacamole/guacd:1.5.0
     - name: ubuntu-mate
       image: ghcr.io/manics/ubuntu-mate-vnc:main
-      env:
-        - name: LOCALHOST
-          value: "yes"
+    - name: guacd
+      image: docker.io/guacamole/guacd:1.5.0
   # startTimeout: 300
   # Use the default UID from the image
   uid:
