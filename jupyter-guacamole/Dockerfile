@@ -16,7 +16,11 @@ ENV JETTY_HOME=/opt/jetty-home-10.0.14
 
 RUN python3 -mpip install jhsingle-native-proxy==0.8.0
 
-RUN useradd --system --create-home --shell /usr/sbin/nologin guacamole
+# Use 1000:1000 to match the default Jupyter user
+ARG UID=1000
+ARG GID=1000
+RUN groupadd --gid $GID guacamole
+RUN useradd --system --create-home --shell /usr/sbin/nologin --uid $UID --gid $GID guacamole
 WORKDIR /home/guacamole
 
 ARG GUACAMOLE_JUPYTER_VERSION=1.5.0

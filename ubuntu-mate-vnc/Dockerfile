@@ -22,29 +22,40 @@ RUN apt-get update -y -q && \
     apt-get purge -y -q mate-screensaver && \
     apt-get autoremove -y -q
 
-RUN useradd -m ubuntu -s /usr/bin/bash
+RUN useradd -m ubuntu -s /usr/bin/bash && \
+    mkdir -p /opt/conda/Desktop /opt/conda/icons && \
+    chown -R ubuntu:ubuntu /opt/conda
 
 USER ubuntu
 WORKDIR /home/ubuntu
 
 ARG MAMBAFORGE_VERSION=22.11.1-4
 RUN curl -sfL https://github.com/conda-forge/miniforge/releases/download/$MAMBAFORGE_VERSION/Mambaforge-$MAMBAFORGE_VERSION-Linux-`uname -m`.sh -o Mambaforge.sh && \
-    bash Mambaforge.sh -b -f -p ~/conda && \
+    bash Mambaforge.sh -b -f -p /opt/conda && \
     rm -f Mambaforge.sh
-COPY --chown=ubuntu:ubuntu environment.yml /home/ubuntu/environment.yml
-RUN ~/conda/bin/mamba init && \
-    ~/conda/bin/mamba env update --file /home/ubuntu/environment.yml
+COPY --chown=ubuntu:ubuntu environment.yml /opt/conda/environment.yml
+RUN /opt/conda/bin/mamba init && \
+    /opt/conda/bin/mamba env update --file /opt/conda/environment.yml
+
+COPY --chown=ubuntu:ubuntu jupyter_logo.svg /opt/conda/icons/jupyter_logo.svg
+COPY --chown=ubuntu:ubuntu jupyterlab.desktop /opt/conda/Desktop/jupyterlab.desktop
 
 RUN mkdir /home/ubuntu/Desktop && \
-    ln -s /usr/share/applications/mate-terminal.desktop /home/ubuntu/Desktop/mate-terminal.desktop && \
-    ln -s /usr/share/applications/firefox.desktop /home/ubuntu/Desktop/firefox.desktop
+    ln -s \
+        /usr/share/applications/mate-terminal.desktop \
+        /usr/share/applications/firefox.desktop \
+        /opt/conda/Desktop/jupyterlab.desktop \
+        /home/ubuntu/Desktop
 
-COPY --chown=ubuntu:ubuntu jupyter_logo.svg /home/ubuntu/.icons/jupyter_logo.svg
-COPY --chown=ubuntu:ubuntu jupyterlab.desktop /home/ubuntu/Desktop/jupyterlab.desktop
+USER root
+# /home/ubuntu may be overwritten with a persistent volume
+# Create a copy and restore on first start if necessary
+RUN rsync -a /home/ubuntu/ /home/ubuntu.orig/
 
 COPY start-mate.sh /usr/local/bin/start-mate.sh
 COPY start.sh /usr/local/bin/start.sh
 
+USER ubuntu
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 EXPOSE 5901
