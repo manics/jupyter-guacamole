@@ -3,6 +3,6 @@
 Version=1.0
 Type=Application
 Terminal=true
-Icon=/home/ubuntu/.icons/jupyter_logo.svg
-Exec=/home/ubuntu/conda/bin/jupyter-lab
+Icon=/opt/conda/icons/jupyter_logo.svg
+Exec=/opt/conda/bin/jupyter-lab
 Name=JupyterLab
