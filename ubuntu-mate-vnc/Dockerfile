@@ -19,7 +19,9 @@ RUN apt-get update -y -q && \
     add-apt-repository -y ppa:mozillateam/ppa && \
     printf 'Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001\n' > /etc/apt/preferences.d/firefox && \
     apt-get install -y -q firefox && \
-    apt-get purge -y -q mate-screensaver && \
+    apt-get purge -y -q \
+        blueman \
+        mate-screensaver && \
     apt-get autoremove -y -q
 
 RUN useradd -m ubuntu -s /usr/bin/bash && \
