@@ -1,5 +1,5 @@
 # Ubuntu Mate desktop with Firefox, Conda and JupyterLab
-FROM docker.io/library/ubuntu:22.04
+FROM docker.io/library/ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -18,20 +18,20 @@ RUN apt-get update -y -q && \
         vim && \
     add-apt-repository -y ppa:mozillateam/ppa && \
     printf 'Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001\n' > /etc/apt/preferences.d/firefox && \
-    apt-get install -y -q firefox && \
+    apt-get install -y -q --allow-downgrades firefox && \
     apt-get purge -y -q \
         blueman \
-        mate-screensaver && \
+        mate-screensaver \
+        update-notifier && \
     apt-get autoremove -y -q
 
-RUN useradd -m ubuntu -s /usr/bin/bash && \
-    mkdir -p /opt/conda/Desktop /opt/conda/icons && \
+RUN mkdir -p /opt/conda/Desktop /opt/conda/icons && \
     chown -R ubuntu:ubuntu /opt/conda
 
 USER ubuntu
 WORKDIR /home/ubuntu
 
-ARG MAMBAFORGE_VERSION=22.11.1-4
+ARG MAMBAFORGE_VERSION=24.3.0-0
 RUN curl -sfL https://github.com/conda-forge/miniforge/releases/download/$MAMBAFORGE_VERSION/Mambaforge-$MAMBAFORGE_VERSION-Linux-`uname -m`.sh -o Mambaforge.sh && \
     bash Mambaforge.sh -b -f -p /opt/conda && \
     rm -f Mambaforge.sh
