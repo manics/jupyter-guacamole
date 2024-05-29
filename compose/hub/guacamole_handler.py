@@ -76,7 +76,6 @@ async def guacamole_url(username):
     ciphertext = encrypt(JSON_SECRET_KEY, signature + message)
 
     http_client = AsyncHTTPClient()
-    # content_type, body = encode_multipart_formdata(fields, files)
     body = "data=" + url_escape(standard_b64encode(ciphertext))
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -89,7 +88,6 @@ async def guacamole_url(username):
         headers=headers,
         body=body,
     )
-    # try:
     response = await http_client.fetch(request)
     if response.error:
         d = response.error
@@ -97,7 +95,6 @@ async def guacamole_url(username):
         raise HTTPError(500, "Failed to get Guacamole token")
     else:
         d = json.loads(response.body)
-        log.error(f"RESPONSE [guacamole]: {d}")
     return d
 
 
@@ -105,13 +102,13 @@ class GuacamoleHandler(HubOAuthenticated, RequestHandler):
     @authenticated
     async def get(self):
         user_model = self.get_current_user()
-        app_log.debug(f"user_model: {user_model}")
+        log.debug(f"user_model: {user_model}")
 
         # Note if server field is missing (not just empty) this means the oauth
         # scopes are missing
         if not user_model["server"]:
             # This may be out of date, make an API call to refresh server info
-            app_log.error(f"user_model: {user_model}")
+            log.error(f"user_model: {user_model}")
 
             token = self.hub_auth.get_token(self)
             http_client = AsyncHTTPClient()
@@ -124,12 +121,12 @@ class GuacamoleHandler(HubOAuthenticated, RequestHandler):
 
             user = json.loads(response.body)
             if not user["server"]:
-                app_log.error(f"user: {user_model}")
+                log.error(f"user: {user_model}")
                 raise HTTPError(400, reason="User's server is not running")
 
         self.set_header("content-type", "application/json")
         d = await guacamole_url(user_model["name"])
-        # app_log.debug(d)
+        # log.debug(d)
         d["url"] = f"http://{GUACAMOLE_PUBLIC_HOST}/guacamole/#/client/?token={d['authToken']}"
 
         # self.write(json.dumps(d, indent=2, sort_keys=True))
@@ -154,8 +151,6 @@ def main():
     url = urlparse(os.environ['JUPYTERHUB_SERVICE_URL'])
 
     http_server.listen(url.port, url.hostname)
-
-    log.error("STARTED guacamole_handler")
 
     IOLoop.current().start()
 
