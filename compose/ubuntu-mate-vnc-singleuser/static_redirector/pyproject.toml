@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jupyter-static-redirector"
+description = "Jupyter Server Static Redirector"
+readme = "README.md"
+license = ""
+requires-python = ">=3.8"
+dependencies = [
+    "jinja2",
+    "jupyter_server",
+]
+version = "0.0.1"
+# dynamic = ["version"]
+
+[project.scripts]
+jupyter-static-redirector = "static_redirector.application:main"
+
+[tool.hatch.build.targets.wheel.shared-data]
+"etc/jupyter/jupyter_server_config.d" = "etc/jupyter/jupyter_server_config.d"
+
+[tool.hatch.build.targets.wheel]
+packages = ["static_redirector"]
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = [
+    "hatch-jupyter-builder>=0.8.2",
+]

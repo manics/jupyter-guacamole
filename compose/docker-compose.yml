@@ -1,0 +1,66 @@
+version: "3"
+
+services:
+  guacd:
+    image: docker.io/guacamole/guacd:1.5.5
+    networks:
+      - jupyterhub
+
+  guacamole:
+    image: docker.io/guacamole/guacamole:1.5.5
+    environment:
+      GUACAMOLE_HOME: /etc/guacamole
+      GUACD_HOSTNAME: guacd
+      LOGBACK_LEVEL: debug
+      # https://guacamole.apache.org/doc/gug/json-auth.html#configuring-guacamole-to-accept-encrypted-json
+      JSON_SECRET_KEY: 0123456789abcdef0123456789abcdef
+    # restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - jupyterhub
+    volumes:
+      - ./guacamole-json-auth/guacamole.properties:/etc/guacamole/guacamole.properties:ro,z
+
+  hub:
+    build:
+      context: ./hub
+      args:
+        JUPYTERHUB_VERSION: 5.0.0
+    container_name: jupyterhub
+    networks:
+      - jupyterhub
+    volumes:
+      - "./hub/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro,z"
+      - "./hub/guacamole_handler.py:/srv/jupyterhub/guacamole_handler.py:ro,z"
+      - "jupyterhub-data:/data"
+      # Docker socket
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+    ports:
+      - "8000:8000"
+    environment:
+      # All containers will join this network
+      DOCKER_NETWORK_NAME: jupyterhub
+      # JupyterHub will spawn this Notebook image for users
+      DOCKER_NOTEBOOK_IMAGE: ubuntu-mate-vnc-singleuser
+
+      # Config for hub/guacamole-handler.py
+      # Must match guacamole JSON_SECRET_KEY
+      JSON_SECRET_KEY: 0123456789abcdef0123456789abcdef
+      GUACAMOLE_HOST: guacamole:8080
+      GUACAMOLE_PUBLIC_HOST: localhost:8080
+      JUPYTERHUB_GUACAMOLE_SERVICE: http://localhost:8000/services/guacamole/
+
+  ubuntu-mate-vnc-singleuser:
+    build:
+      context: ./ubuntu-mate-vnc-singleuser
+    image: ubuntu-mate-vnc-singleuser
+    # Dummy command, we just need to build this image, not run it
+    command: "true"
+
+volumes:
+  jupyterhub-data:
+
+networks:
+  jupyterhub:
+    name: jupyterhub
