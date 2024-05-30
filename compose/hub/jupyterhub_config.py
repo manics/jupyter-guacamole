@@ -47,7 +47,7 @@ c.JupyterHub.services = [
     {
         "name": "guacamole",
         "url": "http://127.0.0.1:10102",
-        "command": [sys.executable, "./guacamole_handler.py"],
+        "command": [sys.executable, "./guacamole_handler/guacamole_handler.py"],
         "environment": dict((k, os.environ[k]) for k in [
             "JSON_SECRET_KEY",
             "GUACAMOLE_HOST",

@@ -32,7 +32,7 @@ services:
       - jupyterhub
     volumes:
       - "./hub/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro,z"
-      - "./hub/guacamole_handler.py:/srv/jupyterhub/guacamole_handler.py:ro,z"
+      - "./hub/guacamole_handler:/srv/jupyterhub/guacamole_handler:ro,z"
       - "jupyterhub-data:/data"
       # Docker socket
       - "/var/run/docker.sock:/var/run/docker.sock:rw"

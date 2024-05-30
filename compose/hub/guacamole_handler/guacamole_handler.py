@@ -26,6 +26,7 @@ import hashlib
 import json
 from time import time
 from tornado.escape import url_escape
+from http.client import responses
 
 from tornado.log import app_log
 log = app_log
@@ -122,15 +123,31 @@ class GuacamoleHandler(HubOAuthenticated, RequestHandler):
             user = json.loads(response.body)
             if not user["server"]:
                 log.error(f"user: {user_model}")
-                raise HTTPError(400, reason="User's server is not running")
+                raise HTTPError(409, reason="User's server is not running")
 
-        self.set_header("content-type", "application/json")
         d = await guacamole_url(user_model["name"])
         # log.debug(d)
-        d["url"] = f"http://{GUACAMOLE_PUBLIC_HOST}/guacamole/#/client/?token={d['authToken']}"
+        url = f"http://{GUACAMOLE_PUBLIC_HOST}/guacamole/#/client/?token={d['authToken']}"
 
+        # self.set_header("content-type", "application/json")
         # self.write(json.dumps(d, indent=2, sort_keys=True))
-        self.redirect(d["url"])
+        # self.redirect(url)
+        self.render("index.html", guacamole_url=url)
+
+    def write_error(self, status_code, **kwargs):
+        exc_info = kwargs.get("exc_info")
+        reason = responses.get(status_code, "Unknown HTTP Error")
+        message = ""
+        if exc_info:
+            exception = exc_info[1]
+            r = getattr(exception, "reason", "")
+            if r:
+                reason = r
+            message = getattr(exception, "message", "")
+
+        self.set_status(status_code, reason)
+        self.render("error.html", status_code=status_code, reason=reason, message=message)
+
 
 def main():
     app = Application(
