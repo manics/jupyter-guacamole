@@ -31,7 +31,7 @@ RUN mkdir -p /opt/conda/Desktop /opt/conda/icons && \
 USER ubuntu
 WORKDIR /home/ubuntu
 
-ARG MAMBAFORGE_VERSION=24.3.0-0
+ARG MAMBAFORGE_VERSION=24.9.0-0
 RUN curl -sfL https://github.com/conda-forge/miniforge/releases/download/$MAMBAFORGE_VERSION/Mambaforge-$MAMBAFORGE_VERSION-Linux-`uname -m`.sh -o Mambaforge.sh && \
     bash Mambaforge.sh -b -f -p /opt/conda && \
     rm -f Mambaforge.sh

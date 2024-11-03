@@ -1,5 +1,5 @@
 ################################################################################
-FROM docker.io/library/ubuntu:22.04
+FROM docker.io/library/ubuntu:24.04
 
 USER root
 
@@ -8,23 +8,27 @@ RUN apt-get -y -q update && \
     curl \
     default-jre-headless \
     python3-pip \
+    python3-venv \
     tar
 
+ARG JETTY_VERSION=10.0.24
 RUN cd /opt && \
-    curl -sfL https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/10.0.14/jetty-home-10.0.14.tar.gz | tar -zx
-ENV JETTY_HOME=/opt/jetty-home-10.0.14
+    curl -sfL https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/$JETTY_VERSION/jetty-home-$JETTY_VERSION.tar.gz | tar -zx
+ENV JETTY_HOME=/opt/jetty-home-$JETTY_VERSION
 
-RUN python3 -mpip install jhsingle-native-proxy==0.8.0
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/python -mpip install jhsingle-native-proxy==0.8.3
 
 # Use 1000:1000 to match the default Jupyter user
-ARG UID=1000
-ARG GID=1000
-RUN groupadd --gid $GID guacamole
-RUN useradd --system --create-home --shell /usr/sbin/nologin --uid $UID --gid $GID guacamole
+ARG USERID=1000
+ARG GROUPID=1000
+RUN userdel -r ubuntu && \
+    groupadd --gid $GROUPID guacamole && \
+    useradd --system --create-home --shell /usr/sbin/nologin --uid $USERID --gid $GROUPID guacamole
 WORKDIR /home/guacamole
 
-ARG GUACAMOLE_JUPYTER_VERSION=1.5.0
-ARG GUACAMOLE_JUPYTER_TAG=1.5.0-jupyter.0
+ARG GUACAMOLE_JUPYTER_VERSION=1.5.5
+ARG GUACAMOLE_JUPYTER_TAG=1.5.5-jupyter.0
 RUN mkdir -p \
         /home/guacamole/webapps \
         /etc/guacamole/extensions && \
