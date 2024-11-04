@@ -14,4 +14,4 @@ else
   AUTHTYPE=""
 fi
 
-exec jhsingle-native-proxy --debug --logs $AUTHTYPE --request-timeout 60 --ready-timeout 60 --progressive --destport 8080 -- java -jar $JETTY_HOME/start.jar --debug
+exec /opt/venv/bin/jhsingle-native-proxy --debug --logs $AUTHTYPE --request-timeout 60 --ready-timeout 60 --progressive --destport 8080 -- java -jar $JETTY_HOME/start.jar --debug
