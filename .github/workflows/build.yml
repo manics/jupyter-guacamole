@@ -63,12 +63,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Free disk space
-        run: | 
+        run: |
           df -h
           sudo swapoff -a
           sudo rm -f /swapfile
           sudo apt clean
-          docker rmi $(docker image ls -aq)
+          docker rmi $(docker image ls -aq) || true
           df -h
 
       - name: Build and push to container registry
