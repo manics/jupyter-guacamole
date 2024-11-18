@@ -1,16 +1,17 @@
-FROM ghcr.io/manics/ubuntu-mate-vnc:main
+# Use this image for Z2JH where the singleuser server static-redirector and
+# desktop containers are seperate
+#
+# docker.io/manics/jupyter-static-redirector
+FROM docker.io/library/python:3.13.0-slim-bookworm
 
-# jupyterhub-singleuser conda requires jupyterlab
-# jupyterhub-base provides jupyterhub-singleuser
-RUN /opt/conda/bin/mamba create -y -n singleuser \
-    python \
-    pip \
-    jupyter_server \
-    jupyterhub-base
+RUN useradd --create-home --uid 1000 jovyan
 
 COPY static_redirector /src/static_redirector
-RUN /opt/conda/envs/singleuser/bin/pip install /src/static_redirector
+RUN pip install --no-cache-dir \
+    jupyterhub=="5.*" \
+    /src/static_redirector
 
-COPY jupyter_server_config.py /opt/conda/etc/jupyter/
+COPY jupyter_server_config.py /etc/jupyter/
 
-CMD ["/opt/conda/envs/singleuser/bin/jupyterhub-singleuser"]
+USER jovyan
+CMD ["jupyterhub-singleuser"]

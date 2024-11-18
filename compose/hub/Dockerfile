@@ -1,16 +1,12 @@
-# Copyright (c) Jupyter Development Team.
-# Distributed under the terms of the Modified BSD License.
-ARG JUPYTERHUB_VERSION
+# A standalone JupyterHub guacamole_handler service
+# Use this for Z2JH where a hub-managed service URL doesn't work
+# because localhost can't be accessed by configurable HTTP proxy
+# running separately, and we don't know the network iface to use
+#
+# docker.io/manics/jupyterhub-guacamolehandler
+ARG JUPYTERHUB_VERSION=5.2.1
 FROM quay.io/jupyterhub/jupyterhub:$JUPYTERHUB_VERSION
 
-# Install dockerspawner, nativeauthenticator
-# hadolint ignore=DL3013
-RUN python3 -m pip install --no-cache-dir \
-    dockerspawner \
-    jupyterhub-nativeauthenticator
+COPY guacamole_handler /opt/guacamole_handler
 
-# COPY guacamole_handler.py jupyterhub_config.py /srv/jupyterhub/
-
-VOLUME /data
-
-CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
+CMD ["python", "/opt/guacamole_handler/guacamole_handler.py"]
