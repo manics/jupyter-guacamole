@@ -24,12 +24,12 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import hmac
 import hashlib
 import json
+import logging
 from time import time
 from tornado.escape import url_escape
 from http.client import responses
 
-from tornado.log import app_log
-log = app_log
+log = logging.getLogger("jupyterhub_guacamole")
 
 GUACAMOLE_HOST = os.environ["GUACAMOLE_HOST"]
 GUACAMOLE_PUBLIC_HOST = os.environ["GUACAMOLE_PUBLIC_HOST"]
@@ -82,9 +82,9 @@ async def guacamole_url(username):
         "Content-Type": "application/x-www-form-urlencoded",
         "content-length": str(len(body)),
     }
-    log.error(f"Fetching http://{GUACAMOLE_HOST}/guacamole/api/tokens {message}")
+    log.debug(f"Fetching {GUACAMOLE_HOST}/guacamole/api/tokens {message}")
     request = HTTPRequest(
-        f"http://{GUACAMOLE_HOST}/guacamole/api/tokens",
+        f"{GUACAMOLE_HOST}/guacamole/api/tokens",
         "POST",
         headers=headers,
         body=body,
@@ -109,8 +109,6 @@ class GuacamoleHandler(HubOAuthenticated, RequestHandler):
         # scopes are missing
         if not user_model["server"]:
             # This may be out of date, make an API call to refresh server info
-            log.error(f"user_model: {user_model}")
-
             token = self.hub_auth.get_token(self)
             http_client = AsyncHTTPClient()
             response = await http_client.fetch(
@@ -126,8 +124,8 @@ class GuacamoleHandler(HubOAuthenticated, RequestHandler):
                 raise HTTPError(409, reason="User's server is not running")
 
         d = await guacamole_url(user_model["name"])
-        # log.debug(d)
-        url = f"http://{GUACAMOLE_PUBLIC_HOST}/guacamole/#/client/?token={d['authToken']}"
+        log.info(f"Created Guacamole URL for {user_model['name']} default server")
+        url = f"{GUACAMOLE_PUBLIC_HOST}/guacamole/#/client/?token={d['authToken']}"
 
         # self.set_header("content-type", "application/json")
         # self.write(json.dumps(d, indent=2, sort_keys=True))
@@ -149,28 +147,47 @@ class GuacamoleHandler(HubOAuthenticated, RequestHandler):
         self.render("error.html", status_code=status_code, reason=reason, message=message)
 
 
+class HealthHandler(RequestHandler):
+    async def get(self):
+        self.set_header("content-type", "application/json")
+        self.write(json.dumps({"status" :"ok"}, indent=2, sort_keys=True))
+
+
 def main():
     app = Application(
         [
-            (os.environ['JUPYTERHUB_SERVICE_PREFIX'], GuacamoleHandler),
+            (os.environ["JUPYTERHUB_SERVICE_PREFIX"], GuacamoleHandler),
             (
                 url_path_join(
-                    os.environ['JUPYTERHUB_SERVICE_PREFIX'], 'oauth_callback'
+                    os.environ["JUPYTERHUB_SERVICE_PREFIX"], "oauth_callback"
                 ),
                 HubOAuthCallbackHandler,
             ),
-            (r'.*', GuacamoleHandler),
+            ("/health/?", HealthHandler),
+            (r".*", GuacamoleHandler),
         ],
         cookie_secret=os.urandom(32),
     )
 
     http_server = HTTPServer(app)
-    url = urlparse(os.environ['JUPYTERHUB_SERVICE_URL'])
 
-    http_server.listen(url.port, url.hostname)
+    jh_service_url = os.getenv("JUPYTERHUB_SERVICE_URL")
+    if jh_service_url:
+        url = urlparse(jh_service_url)
+        hostname = url.hostname
+        port = url.port
+    else:
+        hostname = ""
+        port = 8040
 
+    log.info(f"Listening on {hostname}:{port}")
+    http_server.listen(port, hostname)
     IOLoop.current().start()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    log.setLevel("INFO")
+    h = logging.StreamHandler()
+    h.setFormatter(logging.Formatter("[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] %(message)s"))
+    log.addHandler(h)
     main()

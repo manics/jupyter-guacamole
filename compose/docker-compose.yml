@@ -26,7 +26,7 @@ services:
     build:
       context: ./hub
       args:
-        JUPYTERHUB_VERSION: 5.0.0
+        JUPYTERHUB_VERSION: 5.2.1
     container_name: jupyterhub
     networks:
       - jupyterhub
@@ -47,8 +47,8 @@ services:
       # Config for hub/guacamole-handler.py
       # Must match guacamole JSON_SECRET_KEY
       JSON_SECRET_KEY: 0123456789abcdef0123456789abcdef
-      GUACAMOLE_HOST: guacamole:8080
-      GUACAMOLE_PUBLIC_HOST: localhost:8080
+      GUACAMOLE_HOST: http://guacamole:8080
+      GUACAMOLE_PUBLIC_HOST: http://localhost:8080
       JUPYTERHUB_GUACAMOLE_SERVICE: http://localhost:8000/services/guacamole/
 
   ubuntu-mate-vnc-singleuser:

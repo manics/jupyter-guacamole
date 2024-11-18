@@ -1,12 +1,16 @@
 FROM ghcr.io/manics/ubuntu-mate-vnc:main
 
-RUN /opt/conda/bin/mamba create -y -n singleuser python=3.11 pip
+# jupyterhub-singleuser conda requires jupyterlab
+# jupyterhub-base provides jupyterhub-singleuser
+RUN /opt/conda/bin/mamba create -y -n singleuser \
+    python \
+    pip \
+    jupyter_server \
+    jupyterhub-base
 
-RUN /opt/conda/envs/singleuser/bin/pip install \
-        jupyter-server \
-        jupyterhub
-
-ADD static_redirector /src/static_redirector
+COPY static_redirector /src/static_redirector
 RUN /opt/conda/envs/singleuser/bin/pip install /src/static_redirector
 
-CMD /opt/conda/envs/singleuser/bin/jupyterhub-singleuser
+COPY jupyter_server_config.py /opt/conda/etc/jupyter/
+
+CMD ["/opt/conda/envs/singleuser/bin/jupyterhub-singleuser"]

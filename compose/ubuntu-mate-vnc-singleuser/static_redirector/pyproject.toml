@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "jupyter-static-redirector"
 description = "Jupyter Server Static Redirector"
 readme = "README.md"
-license = ""
+license = "MIT"
 requires-python = ">=3.8"
 dependencies = [
     "jinja2",
